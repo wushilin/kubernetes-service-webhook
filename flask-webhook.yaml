@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mutating-webhook
+  namespace: east
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mutating-webhook
+  template:
+    metadata:
+      labels:
+        app: mutating-webhook
+    spec:
+      containers:
+      - name: webhook
+        image: wushilin/test-webhook:1.5
+        ports:
+        - containerPort: 443
+        volumeMounts:
+        - name: tls-certs
+          mountPath: "/etc/webhook/certs"
+          readOnly: true
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: webhook-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mutating-webhook
+  namespace: east
+spec:
+  ports:
+  - port: 443
+    targetPort: 443
+  selector:
+    app: mutating-webhook
